@@ -72,7 +72,7 @@ cat << 'EOF' > "${CHROOT_DIR}/etc/hosts"
 ::1         localhost ip6-localhost ip6-loopback
 EOF
 
-# Set up APT Sources (with 32-bit i386, non-free, and contrib for Steam)
+# Set up initial APT Sources
 cat << EOF > "${CHROOT_DIR}/etc/apt/sources.list"
 deb ${DEBIAN_MIRROR} ${CODENAME} main contrib non-free non-free-firmware
 deb-src ${DEBIAN_MIRROR} ${CODENAME} main contrib non-free non-free-firmware
@@ -80,17 +80,12 @@ deb-src ${DEBIAN_MIRROR} ${CODENAME} main contrib non-free non-free-firmware
 deb ${DEBIAN_MIRROR} ${CODENAME}-updates main contrib non-free non-free-firmware
 deb-src ${DEBIAN_MIRROR} ${CODENAME}-updates main contrib non-free non-free-firmware
 
+deb ${DEBIAN_MIRROR} ${CODENAME}-backports main contrib non-free non-free-firmware
+deb-src ${DEBIAN_MIRROR} ${CODENAME}-backports main contrib non-free non-free-firmware
+
 deb ${SECURITY_MIRROR} ${CODENAME}-security main contrib non-free non-free-firmware
 deb-src ${SECURITY_MIRROR} ${CODENAME}-security main contrib non-free non-free-firmware
 EOF
-
-# Brave Browser official repository signing key
-mkdir -p "${CHROOT_DIR}/etc/apt/keyrings"
-curl -fsSLo "${CHROOT_DIR}/etc/apt/keyrings/brave-browser-archive-keyring.gpg" \
-    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-
-echo "deb [signed-by=/etc/apt/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" \
-    > "${CHROOT_DIR}/etc/apt/sources.list.d/brave-browser-release.list"
 
 # Copy project branding and configs into chroot
 mkdir -p "${CHROOT_DIR}/etc/doxos"
@@ -126,24 +121,61 @@ chroot "${CHROOT_DIR}" /bin/bash << 'CHROOT_EOF'
 export DEBIAN_FRONTEND=noninteractive
 export LC_ALL=C
 
+# Install core certificate authorities, wget & curl first so HTTPS works
+apt-get update
+apt-get install -y --no-install-recommends ca-certificates curl gnupg wget
+
+# Add Brave Browser official repository signing key now that SSL works
+mkdir -p /etc/apt/keyrings
+curl -fsSLo /etc/apt/keyrings/brave-browser-archive-keyring.gpg \
+    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+
+echo "deb [signed-by=/etc/apt/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" \
+    > /etc/apt/sources.list.d/brave-browser-release.list
+
 # Add 32-bit architecture for Steam & Proton gaming
 dpkg --add-architecture i386
 apt-get update
 
-# Install all packages
-grep -v '^#' /tmp/packages.list | grep -v '^$' | xargs apt-get install -y --no-install-recommends
+# Install Core & Linux Kernel first
+apt-get install -y --no-install-recommends \
+    linux-image-amd64 \
+    live-boot \
+    systemd \
+    systemd-sysv \
+    sudo
+
+# Install fastfetch (available in bookworm-backports)
+apt-get install -y -t bookworm-backports fastfetch || true
+if ! command -v fastfetch >/dev/null 2>&1; then
+    curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest \
+    | grep "browser_download_url.*linux-amd64.deb" \
+    | cut -d : -f 2,3 \
+    | tr -d \" \
+    | wget -qi - -O /tmp/fastfetch.deb && dpkg -i /tmp/fastfetch.deb || true
+fi
+
+# Install remaining system packages
+grep -v '^#' /tmp/packages.list | grep -v '^$' | grep -v 'fastfetch' | xargs apt-get install -y --no-install-recommends || true
 
 # Create default live user "dox" with sudo access (password: dox)
-useradd -m -s /bin/bash -g users -G sudo,audio,video,plugdev,netdev dox
+groupadd -f netdev
+groupadd -f sudo
+groupadd -f plugdev
+
+useradd -m -s /bin/bash -g users -G sudo,audio,video dox || true
+usermod -a -G netdev,plugdev dox 2>/dev/null || true
 echo "dox:dox" | chpasswd
 echo "root:root" | chpasswd
+
+mkdir -p /etc/sudoers.d
 echo "dox ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dox
 chmod 0440 /etc/sudoers.d/dox
 
 # Enable essential systemd services
-systemctl enable NetworkManager.service
-systemctl enable lightdm.service
-systemctl enable doxos-beep.service
+systemctl enable NetworkManager.service 2>/dev/null || true
+systemctl enable lightdm.service 2>/dev/null || true
+systemctl enable doxos-beep.service 2>/dev/null || true
 
 # Clean up apt caches to minimize ISO size
 apt-get clean
