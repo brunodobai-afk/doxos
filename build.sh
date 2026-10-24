@@ -35,6 +35,7 @@ apt-get install -y -qq \
     debootstrap \
     squashfs-tools \
     xorriso \
+    grub-common \
     grub-pc-bin \
     grub-efi-amd64-bin \
     mtools \
@@ -238,33 +239,8 @@ menuentry "System Poweroff" {
 }
 EOF
 
-# Build EFI image for UEFI systems
-mkdir -p "${LIVE_IMAGE_DIR}/EFI/BOOT"
-grub-mkstandalone \
-    --format=x86_64-efi \
-    --output="${LIVE_IMAGE_DIR}/EFI/BOOT/BOOTX64.EFI" \
-    --locales="" \
-    --fonts="" \
-    "boot/grub/grub.cfg=${LIVE_IMAGE_DIR}/boot/grub/grub.cfg"
-
-# Package into bootable Hybrid ISO (BIOS + UEFI)
-xorriso -as mkisofs \
-    -iso-level 3 \
-    -full-iso9660-filenames \
-    -volid "DOXOS_LIVE" \
-    -eltorito-boot boot/grub/bios.img \
-    -no-emul-boot \
-    -boot-load-size 4 \
-    -boot-info-table \
-    --eltorito-catalog boot/grub/boot.cat \
-    --grub2-boot-info \
-    --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img \
-    -eltorito-alt-boot \
-    -e EFI/BOOT/BOOTX64.EFI \
-    -no-emul-boot \
-    -isohybrid-gpt-basdat \
-    -output "${OUTPUT_ISO}" \
-    "${LIVE_IMAGE_DIR}"
+# Build universal Hybrid ISO (BIOS + UEFI) using grub-mkrescue
+grub-mkrescue -o "${OUTPUT_ISO}" "${LIVE_IMAGE_DIR}" -- -volid "DOXOS_LIVE"
 
 echo "=========================================================="
 echo " [SUCCESS] DOXos ISO Generated Successfully!"
