@@ -1,0 +1,11 @@
+NAME="DOXos"
+PRETTY_NAME="DOXos GNU/Linux"
+ID=doxos
+ID_LIKE=debian
+VERSION_ID="1.0"
+VERSION="1.0 (Those Who Dare)"
+VERSION_CODENAME=bookworm
+ANSI_COLOR="0;37"
+HOME_URL="https://github.com/doxos-linux/doxos"
+SUPPORT_URL="https://github.com/doxos-linux/doxos/issues"
+BUG_REPORT_URL="https://github.com/doxos-linux/doxos/issues"

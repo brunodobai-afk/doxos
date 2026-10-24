@@ -1,0 +1,9 @@
+# Build artifacts
+build_work/
+*.iso
+*.squashfs
+*.tmp
+*.log
+
+# Checksums
+DOXos-SHA256.txt

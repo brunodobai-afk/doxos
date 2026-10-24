@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=DOXos Ready Beep
+Comment=3-Beep audio confirmation upon reaching desktop
+Exec=/usr/local/bin/doxos-beep
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true

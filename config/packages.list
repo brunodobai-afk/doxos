@@ -1,0 +1,82 @@
+# ==============================================================================
+# DOXos Package Manifest
+# ==============================================================================
+
+# Core Linux & Hardware Support
+linux-image-amd64
+linux-headers-amd64
+live-boot
+live-config
+live-config-systemd
+firmware-linux
+firmware-linux-free
+firmware-linux-nonfree
+firmware-misc-nonfree
+firmware-realtek
+firmware-iwlwifi
+firmware-atheros
+network-manager
+network-manager-gnome
+wpasupplicant
+pciutils
+usbutils
+
+# Graphical Desktop (XFCE4 - Lightning Fast & Simple like Slackware)
+xorg
+xserver-xorg-video-all
+lightdm
+lightdm-gtk-greeter
+xfce4
+xfce4-terminal
+xfce4-goodies
+thunar-archive-plugin
+file-roller
+mousepad
+
+# Aesthetics & Themes (Monochrome / Dark / High-Contrast)
+greybird-gtk-theme
+papirus-icon-theme
+fonts-jetbrains-mono
+fonts-noto-color-emoji
+
+# System & Audio Stack (Low latency PipeWire)
+pipewire
+pipewire-audio
+pipewire-pulse
+pipewire-alsa
+wireplumber
+alsa-utils
+beep
+
+# Gaming & Performance (PikaOS inspired)
+gamemode
+mangohud
+vulkan-tools
+mesa-vulkan-drivers
+mesa-vulkan-drivers:i386
+libgl1-mesa-dri
+libgl1-mesa-dri:i386
+libgl1:i386
+
+# User Requested Applications
+steam
+brave-browser
+gnome-software
+gnome-software-plugin-flatpak
+flatpak
+
+# Terminal & Utilities
+fastfetch
+sudo
+curl
+wget
+git
+htop
+nano
+tar
+zip
+unzip
+
+# Installer (Calamares Live Installer to install DOXos to disk)
+calamares
+calamares-settings-debian

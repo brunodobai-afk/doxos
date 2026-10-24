@@ -1,0 +1,31 @@
+name: Build DOXos ISO
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Build DOXos Hybrid ISO
+        run: |
+          sudo bash build.sh
+
+      - name: Calculate Checksums
+        run: |
+          sha256sum DOXos-*.iso > DOXos-SHA256.txt
+          cat DOXos-SHA256.txt
+
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DOXos-Live-ISO
+          path: |
+            DOXos-*.iso
+            DOXos-SHA256.txt
+          retention-days: 14
